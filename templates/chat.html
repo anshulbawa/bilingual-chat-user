@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>User Chat Interface</title>
+
+	<!-- for mobile screens -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- stylesheets are conveniently separated into components -->
+	<link rel="stylesheet" media="all" href="{{ url_for('static',filename='styles/setup.css') }}">
+	<link rel="stylesheet" media="all" href="{{ url_for('static',filename='styles/says.css') }}">
+	<link rel="stylesheet" media="all" href="{{ url_for('static',filename='styles/reply.css') }}">
+	<link rel="stylesheet" media="all" href="{{ url_for('static',filename='styles/typing.css') }}">
+	<link rel="stylesheet" media="all" href="{{ url_for('static',filename='styles/input.css') }}">
+	<style>
+	body {
+		background: #dcdde0;
+	}
+	.bubble-container {
+		height: 100vh;
+	}
+	.bubble-container .input-wrap textarea {
+		margin: 0;
+		width: calc(100% - 30px);
+	}
+	</style>
+</head>
+<body>
+
+<!-- container element for chat window -->
+<div id="chat"></div>
+
+<form action="" method="POST">
+<input type="hidden" name="message" id="message" value=o.input>
+</form>
+
+<!-- import the JavaScript file -->
+<script src="../static/Bubbles.js"></script>
+<script>
+// initialize by constructing a named function...
+// ...and add text processing plugin:
+var chatWindow = new Bubbles(document.getElementById("chat"), "chatWindow", {
+  // the one that we care about is inputCallbackFn()
+  // this function returns an object with some data that we can process from user input
+  // and understand the context of it
+
+  // this is an example function that matches the text user typed to one of the answer bubbles
+  // this function does no natural language processing
+  // this is where you may want to connect this script to NLC backend.
+  inputCallbackFn: function(o) {
+    // add error conversation block & recall it if no answer matched
+	var req = new XMLHttpRequest()
+    req.onreadystatechange = function()
+    {
+        if (req.readyState == 4)
+        {
+            if (req.status != 200)
+            {
+                    
+            }
+            else
+            {
+                var response = JSON.parse(req.responseText)
+                document.getElementById('myDiv').innerHTML = response.username
+            }
+        }
+    }
+    req.open('POST', '/step2', false)
+    req.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
+    var postVars = 'message='+ o.input
+    req.send(postVars)
+
+    var response = JSON.parse(req.responseText)
+    var text = response.message 
+
+    chatWindow.talk(
+        {
+          "i-dont-get-it": {
+            says: [
+              text
+            ],
+            reply: o.convo[o.standingAnswer].reply
+          }
+        },
+        "i-dont-get-it"
+      )
+
+    return false
+  }
+
+  // inputCallbackFn: function(o) {
+  //   // add error conversation block & recall it if no answer matched
+  // var req = new XMLHttpRequest()
+  //   req.onreadystatechange = function()
+  //   {
+  //       if (req.readyState == 4)
+  //       {
+  //           if (req.status != 200)
+  //           {
+                    
+  //           }
+  //           else
+  //           {
+  //               var response = JSON.parse(req.responseText)
+  //               document.getElementById('myDiv').innerHTML = response.username
+  //           }
+  //       }
+  //   }
+  //   req.open('POST', '/step2', false)
+  //   req.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
+  //   var postVars = 'message='+ o.input
+  //   req.send(postVars)
+
+  //   var response = JSON.parse(req.responseText)
+  //   var text = response.message 
+
+  //   chatWindow.talk(
+  //       {
+  //         "i-dont-get-it": {
+  //           says: [
+  //             text
+  //           ],
+  //           reply: o.convo[o.standingAnswer].reply
+  //         }
+  //       },
+  //       "i-dont-get-it"
+  //     )
+
+  //   return false
+  // }
+
+
+}) // done setting up chat-bubble
+
+// conversation object defined separately, but just the same as in the
+// "Basic chat-bubble Example" (1-basics.html)
+var convo = {
+  ice: {
+    says: ["Hey! Thank you for taking part in this study. See the text box below? You can start typing whenever you are ready. Please remember that the bot only responds to one message at a time. Now go ahead say hi! "],
+  }
+}
+
+// pass JSON to your function and you're done!
+// setTimeout(function(){ alert("Hello"); }, 3000);
+chatWindow.talk(convo)
+</script>
+<form action="" method="POST">
+<!-- <input type="hidden" name="message" id="message" value=o.input> -->
+<input type="hidden" value="Submit" onclick="return inputCallbackFn(o)">
+</form>
+<div id="myDiv"></div>
+</body>
